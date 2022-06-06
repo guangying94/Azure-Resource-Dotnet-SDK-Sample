@@ -1,0 +1,15 @@
+{
+    "Logging": {
+      "LogLevel": {
+        "Default": "Warning"
+      }
+    },
+    "Parameter":{
+        "RESOURCE_GROUP_NAME": "<RG Name>",
+        "WINDOWS_USERNAME": "<Windows User Name>",
+        "WINDOWS_PASSWORD": "<Windows Password>",
+        "VNET_NAME": "<VNET Name>",
+        "SUBNET_NAME": "<Subnet Name>",
+        "AIB_IMAGE_ID": "</subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/<resource-group>/providers/Microsoft.Compute/galleries/<AIB-gallery-name>/images/<image-name>/versions/<image-version>>"
+    }
+  }

@@ -5,6 +5,7 @@ using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.Configuration;
 
 namespace AzureSDK
 {
@@ -12,15 +13,19 @@ namespace AzureSDK
     {
         static async Task<int> Main(string[] args)
         {
-            Console.WriteLine("Sample console app to create Windows VM");
+            var builder = new ConfigurationBuilder()
+                        .SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json");
 
             //Define variables
-            string resourceGroupName = "SDK-VM";
-            string windowsUserName = "azure-user";
-            string windowsUserPassword = "Q!W@E#r4t5y6";
-            string vnetName = "SDK-VNET";
-            string subnetName = "default";
-            string aibImageID = "/subscriptions/b841a6ea-692d-4c91-98b9-40ab6aa89212/resourceGroups/aibwinsig/providers/Microsoft.Compute/galleries/myIBSIG/images/winSvrimage/versions/0.25241.35683";
+            string resourceGroupName = builder.Build().GetSection("Parameter").GetSection("RESOURCE_GROUP_NAME").Value;
+            string windowsUserName = builder.Build().GetSection("Parameter").GetSection("WINDOWS_USERNAME").Value;
+            string windowsUserPassword = builder.Build().GetSection("Parameter").GetSection("WINDOWS_PASSWORD").Value;
+            string vnetName = builder.Build().GetSection("Parameter").GetSection("VNET_NAME").Value;
+            string subnetName = builder.Build().GetSection("Parameter").GetSection("SUBNET_NAME").Value;
+            string aibImageID = builder.Build().GetSection("Parameter").GetSection("AIB_IMAGE_ID").Value;
+
+            Console.WriteLine("Sample console app to create Windows Azure VM");
 
             //unique id
             var unixTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
@@ -36,10 +41,12 @@ namespace AzureSDK
             ResourceGroupCollection rgCollection = subscription.GetResourceGroups();
             ResourceGroupResource resourceGroup = await subscription.GetResourceGroups().GetAsync(resourceGroupName);
 
+            //Creation of VM
             PublicIPAddressResource publicIP = await CreatePublicIP(resourceGroup, publicIPName);
             NetworkInterfaceResource nic = await CreateNIC(resourceGroup, vnetName, subnetName, nicName, publicIP);
             VirtualMachineResource vm = await CreateVM(resourceGroup, nic, vmName, windowsUserName, windowsUserPassword, aibImageID);
 
+            //Sample Operation
             await Task.Delay(30000);
             StopVM(vm);
             await Task.Delay(30000);
