@@ -45,6 +45,9 @@ namespace AzureSDK
             PublicIPAddressResource publicIP = await CreatePublicIP(resourceGroup, publicIPName);
             NetworkInterfaceResource nic = await CreateNIC(resourceGroup, vnetName, subnetName, nicName, publicIP);
             VirtualMachineResource vm = await CreateVM(resourceGroup, nic, vmName, windowsUserName, windowsUserPassword, aibImageID);
+            //Additional options for creating VM from specialised image from Azure Image Gallery
+            //VirtualMachineResource vm = await CreateVMFromSpecialisedImage(resourceGroup, nic, vmName, aibImageID);
+            
 
             //Sample Operation
             await Task.Delay(30000);
@@ -118,6 +121,54 @@ namespace AzureSDK
                     ComputerName = vmName,
                     AdminUsername = windowsUserName,
                     AdminPassword = windowsUserPassword,
+                },
+                NetworkProfile = new NetworkProfile()
+                {
+                    NetworkInterfaces =
+        {
+            new NetworkInterfaceReference()
+            {
+                Id = nic.Data.Id,
+                Primary = true
+            }
+        }
+                },
+                StorageProfile = new StorageProfile()
+                {
+                    OSDisk = new OSDisk(DiskCreateOptionTypes.FromImage)
+                    {
+                        OSType = OperatingSystemTypes.Windows,
+                        Caching = CachingTypes.ReadWrite,
+                        CreateOption = DiskCreateOptionTypes.FromImage,
+                        ManagedDisk = new ManagedDiskParameters()
+                        {
+                            StorageAccountType = StorageAccountTypes.StandardLRS
+                        }
+                    },
+                    ImageReference = new ImageReference()
+                    {
+                        Id = aibImageID
+                    }
+                }
+            };
+
+            ArmOperation<VirtualMachineResource> lro = await vmCollection.CreateOrUpdateAsync(Azure.WaitUntil.Completed, vmName, input);
+
+            Console.WriteLine("VM created");
+
+            VirtualMachineResource vm = await resourceGroup.GetVirtualMachineAsync(vmName);
+            return vm;
+        }
+        
+        public static async Task<VirtualMachineResource> CreateVMFromSpecialisedImage(ResourceGroupResource resourceGroup, NetworkInterfaceResource nic, string vmName, string aibImageID)
+        {
+            Console.WriteLine("Creating VMs");
+            VirtualMachineCollection vmCollection = resourceGroup.GetVirtualMachines();
+            var input = new VirtualMachineData(resourceGroup.Data.Location)
+            {
+                HardwareProfile = new HardwareProfile()
+                {
+                    VmSize = VirtualMachineSizeTypes.StandardB2Ms
                 },
                 NetworkProfile = new NetworkProfile()
                 {
