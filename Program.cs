@@ -48,6 +48,11 @@ namespace AzureSDK
             //Additional options for creating VM from specialised image from Azure Image Gallery
             //VirtualMachineResource vm = await CreateVMFromSpecialisedImage(resourceGroup, nic, vmName, aibImageID);
             
+            //To retrieve private IP address of created VM
+            NetworkInterfaceResource _nicAfterVM = await resourceGroup.GetNetworkInterfaceAsync(nicName);
+            var ipCollection = await _nicAfterVM.GetNetworkInterfaceIPConfigurationAsync("Primary");
+            string privateIP = ipCollection.Value.Data.PrivateIPAddress;
+            Console.WriteLine("Private IP: " + privateIP);
 
             //Sample Operation
             await Task.Delay(30000);
